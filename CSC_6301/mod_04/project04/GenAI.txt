@@ -1,0 +1,55 @@
+public static void main(String[] args) {
+    AlertSystem alertSystem = new AlertSystem(new EmailService());
+    ArrayList<String> messagesLog = new ArrayList<String>();
+    String message = "Doctor appointment at 8AM today.";
+    alertSystem.notifyUser(message);
+    messagesLog.add(medium + " " + message);
+
+    alertSystem.setMedium(new SMSService());
+    
+    message = "Reply yes for a callback.";
+    alertSystem.notifyUser(message);
+    messagesLog.add(medium + " " + message);
+
+    System.out.println(messagesLog);
+    }
+}  
+
+fix my main to print my log messages with the set medium
+
+What changed:
+
+Replaced messagesLog.add(medium + " " + message); with messagesLog.add(alertSystem.medium.getClass().getSimpleName() + " " + message); in both places.
+This ensures the first log entry is tagged with EmailService and the second with SMSService after setMedium(...).
+
+does this change break the law of demeter?
+
+Short answer: yes, a little.
+
+move this to a logger
+
+I’ll refactor the message tracking out of main and into a dedicated logger class, then wire AlertSystem to use it so logging no longer reaches into internals directly.
+
+Reviewed AlertSystem.java and checked project directory
+I found the exact spots. Next I’m adding a small AlertLogger class and updating main to call it, plus exposing medium name through AlertSystem so logging stays encapsulated.
+
+Updated AlertSystem.java and created AlertLogger.java+13-6
+Refactor is in place. I’ll run diagnostics on the updated Java files now to make sure the new logger integration is error-free.
+
+Checked AlertSystem.java, AlertLogger.java, no problems found
+
+Moved it to a logger and updated your flow.
+
+What I changed:
+
+Added AlertLogger.java
+Updated AlertSystem.java to:
+Add currentMediumName() so callers do not access internals directly
+Replace inline ArrayList logging in main with AlertLogger
+Log each message via logger.log(alertSystem.currentMediumName(), message)
+Print via logger.printLog()
+Result:
+
+Logging is now separated from AlertSystem main logic.
+The Law of Demeter concern is addressed because main no longer reaches into alertSystem.medium.
+Editor diagnostics show no Java errors in both updated files.
